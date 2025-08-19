@@ -1,4 +1,4 @@
-# Evaluaci-n_Almacen
+# Evaluacion_Almacen
 Repositorio creado con el fin de compartir mi prueba para ser evaluada.
 
 Hola que tal soy Edgar Emanuel Guzmán Zuñiga y para este proyecto utilice los siguientes recursos para elaborar el proyecto.
@@ -18,7 +18,6 @@ Para la gestión de Bases de datos opte por:
 PASOS PARA PONER EN MARCHA EL PROYECTO
 
 *Preparación: 
-En caso de no contar con el IDE, JDK y DBMS instalados, guardare en una carpeta adjunta con el nombre *INSTALABLES*.
 -Para el IDE se sugiere añadir el servidor *TOMCAT* en la instalación del IDE.
 
 -En lo que respecta a la configuración de la base de datos.   
@@ -32,7 +31,7 @@ Después de seguir estos pasos de preparación haremos lo siguiente.
 PASO 1. 
 */
 Abriremos una query o script nuevo desde MASTER a lo que ejecutaremos el archivo para crear la BD.
-**Esta sentencia esta en el archivo Almacen.txt en la carpeta de *INSTALABLES*
+**Esta sentencia esta en el archivo Almacen.txt en la carpeta de *SCRIPT*
 
 /*
 PASO 2.
