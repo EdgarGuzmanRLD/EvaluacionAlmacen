@@ -1,0 +1,138 @@
+--Ejecutaremos primero la consulta para crear la base de datos
+CREATE DATABASE Almacen;
+GO
+USE Almacen;
+GO
+
+CREATE TABLE Permisos (
+	Id_Permiso int PRIMARY KEY IDENTITY (1,1),
+	Nombre_Permiso nvarchar (100)
+)
+
+INSERT INTO Permisos (Nombre_Permiso) VALUES
+('Ver módulo inventario'),
+('Agregar nuevos productos'),
+('Aumentar inventario'),
+('Dar de baja/reactivar un producto '),
+('Ver módulo para Salida de productos'),
+('Sacar inventario del almacén'),
+('Ver módulo del histórico')
+
+
+CREATE TABLE Roles (
+	Id_Rol INT PRIMARY KEY IDENTITY (1,1),
+	Nombre_Rol NVARCHAR (50)
+)
+
+INSERT INTO Roles (Nombre_Rol) VALUES
+('Administrador'),
+('Almacenista')
+
+CREATE TABLE Permisos_Roles_Intermedia (
+	Id_Rol INT,
+	Id_Permiso INT,
+	CONSTRAINT FK_PermisoRol_Rol FOREIGN KEY (Id_Rol) REFERENCES Roles(Id_Rol),
+    CONSTRAINT FK_PermisoRol_Permiso FOREIGN KEY (Id_Permiso) REFERENCES Permisos(Id_Permiso)
+)
+
+INSERT INTO Permisos_Roles_Intermedia (Id_Rol, Id_Permiso) VALUES
+(1,1),(1,2),(1,3),(1,4),(1,7),
+(2,1),(2,5),(2,6)
+
+CREATE TABLE Usuarios (
+	Id_Usuario INT PRIMARY KEY IDENTITY (1,1),
+	Nombre_Usuario nvarchar (30),
+	Contraseña NVARCHAR (30),
+	Correo NVARCHAR (30),
+	Id_Rol INT,
+	Estatus Bit,
+	CONSTRAINT FK_Usuario_Rol FOREIGN KEY (Id_Rol) REFERENCES Roles (Id_Rol)
+
+)
+
+INSERT INTO Usuarios  (Nombre_Usuario,Contraseña,Correo,Id_Rol,Estatus) VALUES
+('Administrador','admin123','admin@admin.com',1,1),
+('Almacenista','user123','almacen@almacen.com',2,1)
+
+CREATE TABLE Unidad_Medida (
+	Id_Unidad INT PRIMARY KEY IDENTITY (1,1),
+	Unidad NVARCHAR (50)
+)
+
+INSERT INTO Unidad_Medida (Unidad) VALUES 
+('KG'),
+('LTS'),
+('PZ')
+
+CREATE TABLE Producto (
+	Id_Producto INT PRIMARY KEY IDENTITY (1,1),
+	Nombre_Producto NVARCHAR (200),
+	Cantidad DECIMAL (16,2),
+	Id_Unidad INT,
+	Estatus bit,
+	CONSTRAINT FK_Producto_Unidad  FOREIGN KEY (Id_Unidad) REFERENCES Unidad_Medida (Id_Unidad)
+)
+
+
+CREATE TABLE Bitacora_Movimientos_Productos(
+	Id_Bitacora INT PRIMARY KEY IDENTITY (1,1),
+	Id_Producto INT,
+	Id_Usuario INT,
+	Tipo_Movimiento BIT,
+	Cantidad_Movimiento DECIMAL (16,2),
+	Fecha_Movimiento DATETIME
+	CONSTRAINT FK_Bitacora_Producto FOREIGN KEY (Id_Producto) REFERENCES Producto (Id_Producto),
+	CONSTRAINT FK_Bitacora_Usuario FOREIGN KEY (Id_Usuario) REFERENCES Usuarios (Id_Usuario)
+)
+
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Edgar Emanuel Guzman Zuñiga>
+-- Description:	<Producto que nos permite realizar la modificacion de los montos e insertar en bitacora al mismo tiempo>
+-- =============================================
+CREATE PROCEDURE dbo.cambiar_Cantidad
+@Id_Usuario INT,
+@Id_Producto INT,
+@cantidad DECIMAL (16,2),
+@Accion bit
+AS
+BEGIN TRY
+	BEGIN TRAN
+		DECLARE @AntCantidad DECIMAL (16,2);
+		DECLARE @NuevaCantida DECIMAL (16,2);
+		--/Se obtiene el valor de la cantidad del producto
+		SELECT @AntCantidad= Cantidad FROM Producto WHERE Id_Producto= @Id_Producto
+
+		IF (@Accion=1)
+			BEGIN
+				SET @NuevaCantida= @cantidad +@AntCantidad;
+			END
+		ELSE
+			BEGIN 
+				SET @NuevaCantida= @AntCantidad -@cantidad;
+			END
+
+
+		--/Se modifica la beca para que el estatus pase de 0 a 1
+		UPDATE Producto SET Cantidad = @NuevaCantida WHERE Id_Producto= @Id_Producto
+		--/Se inserta en la bitacora la accion y los datos del usuario que realizo el movimiento
+		select * from Bitacora_Movimientos_Productos
+		INSERT INTO Bitacora_Movimientos_Productos(Id_Producto,Id_Usuario,Tipo_Movimiento, Cantidad_Movimiento, Fecha_Movimiento) 
+		VALUES (@Id_Producto,@Id_Usuario,@Accion,@cantidad,  FORMAT(SYSDATETIMEOFFSET() AT TIME ZONE 'Central Standard Time (Mexico)','yyyy-MM-dd HH:mm:ss'));
+
+	COMMIT
+        
+END TRY
+BEGIN CATCH
+	BEGIN TRAN
+	ROLLBACK
+    SELECT  
+        ERROR_NUMBER() AS ErrorNumber  
+        ,ERROR_SEVERITY() AS ErrorSeverity  
+        ,ERROR_STATE() AS ErrorState  
+        ,ERROR_PROCEDURE() AS ErrorProcedure  
+        ,ERROR_MESSAGE() AS ErrorMessage;
+END CATCH
