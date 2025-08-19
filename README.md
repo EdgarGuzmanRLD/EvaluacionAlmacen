@@ -31,7 +31,7 @@ Después de seguir estos pasos de preparación haremos lo siguiente.
 PASO 1. 
 */
 Abriremos una query o script nuevo desde MASTER a lo que ejecutaremos el archivo para crear la BD.
-**Esta sentencia esta en el archivo Almacen.txt en la carpeta de *SCRIPT*
+**Esta sentencia esta en el archivo Almacen.txt 
 
 /*
 PASO 2.
